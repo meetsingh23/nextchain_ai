@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexChain AI | Secure Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --error: #ef4444;
+            --success: #22c55e;
+            --bg: #020617;
+            --card: #0f172a;
+            --input: #1e293b;
+            --text-muted: #94a3b8;
+            --ai-glow: rgba(99, 102, 241, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1500px;
+            color: white;
+            transition: opacity 0.5s ease;
+        }
+
+        /* AI Animated Background Orbs */
+        .orb {
+            position: absolute; width: 500px; height: 500px; border-radius: 50%;
+            filter: blur(120px); z-index: -1; opacity: 0.15; animation: move 20s infinite alternate;
+        }
+        .orb-1 { background: var(--primary); top: -10%; left: -10%; }
+        .orb-2 { background: #9333ea; bottom: -10%; right: -10%; animation-delay: -7s; }
+
+        @keyframes move { from { transform: translate(0,0); } to { transform: translate(150px, 100px); } }
+
+        .auth-container {
+            width: 1000px; height: 650px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(25px);
+            border-radius: 32px;
+            display: flex;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            flex: 1.1; padding: 60px;
+            background: linear-gradient(135deg, #0b0f1a 0%, #1e1b4b 100%);
+            display: flex; flex-direction: column; justify-content: space-between;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .left-panel::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+            background: var(--primary); box-shadow: 0 0 20px var(--primary);
+        }
+
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--primary); text-shadow: 0 0 15px var(--ai-glow); }
+        
+        .hero-text h2 { font-size: 38px; font-weight: 700; line-height: 1.1; margin-bottom: 25px; letter-spacing: -1px; }
+        .hero-text p { color: var(--text-muted); font-size: 16px; line-height: 1.7; font-family: 'JetBrains Mono'; }
+
+        .right-panel { flex: 1; padding: 60px 70px; display: flex; flex-direction: column; justify-content: center; }
+
+        h3 { font-size: 28px; margin-bottom: 12px; font-weight: 700; }
+        .switch-text { font-size: 14px; color: var(--text-muted); margin-bottom: 35px; }
+        .switch-text span { color: var(--primary); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+
+        .input-group { margin-bottom: 20px; position: relative; }
+        input {
+            width: 100%; background: var(--input); border: 1px solid rgba(255,255,255,0.05);
+            padding: 14px 18px; border-radius: 14px; color: white; outline: none;
+            transition: 0.3s; font-size: 14px;
+        }
+        input:focus { border-color: var(--primary); background: #1e293b; box-shadow: 0 0 20px rgba(99, 102, 241, 0.15); }
+        
+        .error-msg { font-size: 11px; color: var(--error); margin-top: 6px; display: none; font-family: 'JetBrains Mono'; }
+
+        .pass-container { display: flex; gap: 10px; }
+        .suggest-btn {
+            background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary);
+            color: var(--primary); padding: 0 15px; border-radius: 12px;
+            font-size: 11px; cursor: pointer; font-weight: 700; font-family: 'JetBrains Mono';
+            transition: 0.2s;
+        }
+        .suggest-btn:hover { background: var(--primary); color: white; }
+
+        .btn-submit {
+            width: 100%; padding: 16px; background: var(--primary); color: white;
+            border: none; border-radius: 14px; font-weight: 700; cursor: pointer;
+            margin-top: 25px; transition: 0.4s; letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+        }
+        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
+
+        .progress-dots { display: flex; gap: 10px; margin-top: 40px; }
+        .dot { width: 40px; height: 3px; background: #334155; border-radius: 10px; }
+        .dot.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="auth-container" id="card">
+        <div class="left-panel">
+            <div class="logo">NEXCHAIN<span>AI</span></div>
+            <div class="hero-text">
+                <h2 id="left-title">Autonomous Neural Supply Chain.</h2>
+                <p id="left-desc">>> Initializing connection to decentralized supply engine... [v4.2.0-stable]</p>
+            </div>
+            <div class="progress-dots">
+                <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h3 id="form-title">Create Account</h3>
+            <p class="switch-text" id="switch-area">Already registered? <span onclick="showLogin()">Access Hub</span></p>
+
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div class="input-group" id="name-wrap">
+                    <input type="text" id="name" placeholder="Full Name">
+                    <div class="error-msg" id="name-error">NAME_VALIDATION_FAILED: Letters only.</div>
+                </div>
+
+                <div class="input-group" id="phone-wrap">
+                    <input type="text" id="phone" placeholder="Phone (10 Digits)" maxlength="10">
+                    <div class="error-msg" id="phone-error">PHONE_VALIDATION_FAILED: Invalid format.</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Work Email" required>
+                    <div class="error-msg" id="email-error">EMAIL_VALIDATION_FAILED: Invalid node address.</div>
+                </div>
+
+                <div class="input-group">
+                    <div class="pass-container">
+                        <input type="password" id="pass" placeholder="Password" required>
+                        <button type="button" class="suggest-btn" id="suggest-btn" onclick="recommendPass()">AI_GEN</button>
+                    </div>
+                    <div class="error-msg" id="pass-error">PWD_STRENGTH_LOW: Min 8 chars, 1 Upper, 1 Special.</div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="main-btn">REGISTER OPERATIVE</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('card');
+        let isLoginMode = false;
+
+        // 3D Parallax Effect
+        document.addEventListener('mousemove', (e) => {
+            let x = (window.innerWidth / 2 - e.pageX) / 60;
+            let y = (window.innerHeight / 2 - e.pageY) / 60;
+            card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
+
+        // Validation Logic
+        const validate = {
+            email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+            pass: (v) => /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/.test(v),
+            name: (v) => /^[A-Za-z\s]+$/.test(v),
+            phone: (v) => /^\d{10}$/.test(v)
+        };
+
+        function recommendPass() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            let pass = "NX!"; 
+            for (let i = 0; i < 9; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('pass').value = pass;
+        }
+
+        function showLogin() {
+            isLoginMode = true;
+            document.getElementById('form-title').innerText = "Hub Access";
+            document.getElementById('switch-area').innerHTML = "New Operative? <span onclick='showSignup()'>Create Account</span>";
+            document.getElementById('name-wrap').style.display = "none";
+            document.getElementById('phone-wrap').style.display = "none";
+            document.getElementById('suggest-btn').style.display = "none";
+            document.getElementById('main-btn').innerText = "INITIALIZE NEURAL SESSION";
+            document.getElementById('left-title').innerText = "Welcome Back, Operator.";
+            document.getElementById('left-desc').innerText = ">> Resuming central node connection... All systems nominal.";
+        }
+
+        function showSignup() {
+            isLoginMode = false;
+            document.getElementById('form-title').innerText = "Create Account";
+            document.getElementById('switch-area').innerHTML = "Already registered? <span onclick='showLogin()'>Access Hub</span>";
+            document.getElementById('name-wrap').style.display = "block";
+            document.getElementById('phone-wrap').style.display = "block";
+            document.getElementById('suggest-btn').style.display = "block";
+            document.getElementById('main-btn').innerText = "REGISTER OPERATIVE";
+            document.getElementById('left-title').innerText = "Autonomous Neural Supply Chain.";
+        }
+
+        // --- IMPORTANT REDIRECT LOGIC ---
+        function handleAuth(e) {
+            e.preventDefault();
+            const emailVal = document.getElementById('email').value;
+            const passVal = document.getElementById('pass').value;
+
+            if (isLoginMode) {
+                // Dashboard par bhejne wala logic
+                if (validate.email(emailVal) && validate.pass(passVal)) {
+                    document.body.style.opacity = '0';
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html"; // Ye file name check kar lena
+                    }, 500);
+                } else {
+                    alert("INVALID_CREDENTIALS: Neural Sync Failed.");
+                }
+            } else {
+                // Signup Success
+                alert("REGISTRATION_SUCCESS: Redirecting to Hub Access.");
+                showLogin();
+            }
+        }
+    </script>
+</body>
+</html>
