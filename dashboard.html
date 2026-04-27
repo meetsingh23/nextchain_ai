@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexChain AI | Neural Command</title>
+    <title>NexChain AI | Neural Command (Offline)</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -51,10 +50,6 @@
         .table-search-input { padding: 12px 16px; background: #1e293b; border: 1px solid var(--border); border-radius: 10px; color: white; outline: none; font-size: 14px; flex: 1; }
         select.table-search-input { flex: 0.5; cursor: pointer; }
 
-        .map-placeholder { height: 480px; background: #020617; position: relative; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-        .grid-node { position: absolute; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 20px var(--primary); }
-        .node-label { position: absolute; color: var(--text); font-size: 10px; margin-top: 15px; transform: translateX(-30%); font-family: 'JetBrains Mono'; }
-
         #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; }
         .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 10px; border-left: 4px solid var(--primary); margin-top: 10px; font-size: 13px; font-family: 'JetBrains Mono'; }
     </style>
@@ -81,9 +76,9 @@
             <header>
                 <div>
                     <h1 id="page-title" style="margin:0;">Command Center</h1>
-                    <p id="page-desc" style="color:var(--muted); margin:5px 0 0 0; font-size: 13px; font-family: 'JetBrains Mono';">SYSTEM_STATUS: ONLINE</p>
+                    <p id="page-desc" style="color:var(--muted); margin:5px 0 0 0; font-size: 13px; font-family: 'JetBrains Mono';">SYSTEM_STATUS: OFFLINE_MODE</p>
                 </div>
-                <button class="export-btn" onclick="exportData()">Export AI Report</button>
+                <button class="export-btn">Report Locked</button>
             </header>
 
             <div id="main-view">
@@ -103,18 +98,22 @@
                         </section>
 
                         <section class="inventory-section">
-                            <h3 id="table-title" style="margin:0 0 15px 0; font-size: 18px;">Probability Ledger</h3>
+                            <h3 id="table-title" style="margin:0 0 15px 0; font-size: 18px;">Probability Ledger (Demo)</h3>
                             <table>
                                 <thead>
                                     <tr><th>NODE_ID</th><th>ASSET_TYPE</th><th>PREDICTED_QTY</th><th>RISK_SCORE</th><th>SYNC</th></tr>
                                 </thead>
-                                <tbody id="inventoryBody"></tbody>
+                                <tbody id="inventoryBody">
+                                    <tr>
+                                        <td style="font-family: 'JetBrains Mono'; color:var(--primary)">#AI-AAPL</td>
+                                        <td><strong>Apple</strong></td>
+                                        <td>150 Units</td>
+                                        <td><span class="ai-badge">0.12</span></td>
+                                        <td><span style="color:var(--muted)">LOCAL_CACHE</span></td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </section>
-                    </div>
-
-                    <div id="logistics-view" style="display: none;">
-                        <div class="map-placeholder" id="network-map"></div>
                     </div>
                 </div>
                 
@@ -123,161 +122,33 @@
         </main>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDprry0cK_ge8KWOOU1RVX1euortOlKBTo",
-            authDomain: "nexchain-ai-451ed.firebaseapp.com",
-            projectId: "nexchain-ai-451ed",
-            storageBucket: "nexchain-ai-451ed.firebasestorage.app",
-            messagingSenderId: "947712844879",
-            appId: "1:947712844879:web:9d6e617518a778eed3763a"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
+    <script>
+        // MOCK DATA & FUNCTIONS (All API calls removed)
         let CURRENT_LOCATION = 'Lucknow';
         let myLineChart, myDoughnutChart;
 
-        function startFirestoreSync() {
-            const inventoryBody = document.getElementById('inventoryBody');
-            onSnapshot(collection(db, 'neural_assets'), (snapshot) => {
-                let rows = "";
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    rows += `
-                        <tr>
-                            <td style="font-family: 'JetBrains Mono'; color:var(--primary)">${data.node_id}</td>
-                            <td><strong>${data.asset_type}</strong></td>
-                            <td>${data.predicted_qty}</td>
-                            <td><span class="ai-badge">${data.ai_risk_score}</span></td>
-                            <td><span style="color:var(--success)">${data.sync_status || 'SYNCED'}</span></td>
-                        </tr>`;
-                });
-                inventoryBody.innerHTML = rows;
-            });
-        }
-
-        window.addNewAsset = async () => {
-            const input = document.getElementById('commandInput');
-            const val = input.value.trim();
-            if(!val) { showToast("Format: ID, Name, Qty, Risk"); return; }
-            const parts = val.split(',');
-            if(parts.length < 4) { showToast("Missing info! Need 4 values."); return; }
-
-            try {
-                await addDoc(collection(db, 'neural_assets'), {
-                    node_id: parts[0].trim(),
-                    asset_type: parts[1].trim(),
-                    predicted_qty: parts[2].trim(),
-                    ai_risk_score: parts[3].trim(),
-                    sync_status: "LIVE"
-                });
-                updateChartsResponse();
-                input.value = "";
-                showToast("Neural Asset & Graphs Synced!");
-            } catch (e) { showToast("Sync Failed!"); }
+        window.addNewAsset = () => {
+            showToast("Sync disabled in Offline Mode. Connect API to enable.");
         };
-
-        function updateChartsResponse() {
-            if(myLineChart) {
-                myLineChart.data.datasets[0].data = Array.from({length: 6}, () => Math.floor(Math.random() * 80) + 20);
-                myLineChart.update();
-            }
-            if(myDoughnutChart) {
-                const val1 = Math.floor(Math.random() * 50) + 20;
-                const val2 = Math.floor(Math.random() * 30);
-                myDoughnutChart.data.datasets[0].data = [val1, val2, 100 - (val1 + val2)];
-                myDoughnutChart.update();
-            }
-            updateStats();
-        }
 
         window.switchView = (view) => {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
             document.getElementById('page-title').innerText = view;
-            document.getElementById('default-dashboard-view').style.display = (view === 'Logistics') ? 'none' : 'block';
-            document.getElementById('logistics-view').style.display = (view === 'Logistics') ? 'block' : 'none';
-            if(view === 'Logistics') initNeuralMap();
             updateStats();
-            renderControls(view);
         };
 
-        window.terminateSession = async () => {
-            if(confirm("Confirm Neural Disconnection?")) {
-                try { await signOut(auth); window.location.href = "login.html"; } catch (e) { console.error(e); }
-            }
+        window.terminateSession = () => {
+            alert("Session Terminated locally.");
         };
 
         function updateStats() {
-            const confidence = (94 + Math.random() * 5).toFixed(1);
+            const confidence = (98.2).toFixed(1);
             document.getElementById('stats-container').innerHTML = [
                 {l: "AI Confidence", v: `${confidence}%`},
                 {l: "Neural Hub", v: CURRENT_LOCATION},
-                {l: "Market Value", v: `$${(180 + Math.random()*40).toFixed(2)}`},
-                {l: "Node Sync", v: "Active"}
+                {l: "Market Value", v: "$214.50"},
+                {l: "Node Sync", v: "Offline"}
             ].map(s => `<div class="stat-card"><div style="color:var(--muted); font-size:10px;">${s.l}</div><div style="font-size:20px; font-weight:700; margin-top:5px;">${s.v}</div></div>`).join('');
-        }
-
-        function renderControls(view) {
-            const container = document.getElementById('ai-tool-container');
-            if (view === 'AI Insights' || view === 'Command Center') {
-                container.innerHTML = `
-                    <h4 style="margin:0; font-size:13px; font-family:'JetBrains Mono'">NEURAL_SYNC_CONTROLS</h4>
-                    <div class="control-flex">
-                        <select class="table-search-input" id="tickerSelect" onchange="document.getElementById('commandInput').value = this.value">
-                            <option value="">Quick Add Company...</option>
-                            <option value="#AI-AAPL, Apple, 150 Units, 0.12">Apple (AAPL)</option>
-                            <option value="#AI-TSLA, Tesla, 200 Units, 0.25">Tesla (TSLA)</option>
-                            <option value="#AI-NVDA, Nvidia, 500 Units, 0.05">Nvidia (NVDA)</option>
-                            <option value="#AI-GOOGL, Google, 300 Units, 0.10">Google (GOOGL)</option>
-                        </select>
-                        <input type="text" id="commandInput" placeholder="Format: #ID, Name, Qty, Risk" class="table-search-input">
-                        <button class="export-btn" onclick="window.addNewAsset()">Execute Neural Sync</button>
-                    </div>`;
-            } else {
-                // FIXED: Location selector logic to prevent reset
-                container.innerHTML = `
-                    <h4 style="margin:0; font-size:13px;">HUB_LOCATION_SELECTOR</h4>
-                    <div class="control-flex">
-                        <select class="table-search-input" id="hubSelect">
-                            <option value="Lucknow" ${CURRENT_LOCATION === 'Lucknow' ? 'selected' : ''}>Lucknow</option>
-                            <option value="Mumbai" ${CURRENT_LOCATION === 'Mumbai' ? 'selected' : ''}>Mumbai</option>
-                            <option value="NCR" ${CURRENT_LOCATION === 'NCR' ? 'selected' : ''}>NCR</option>
-                        </select>
-                        <button class="export-btn" style="background:#334155" onclick="window.setHub(document.getElementById('hubSelect').value)">Update Grid</button>
-                    </div>`;
-            }
-        }
-
-        window.setHub = (val) => {
-            if(!val) return;
-            CURRENT_LOCATION = val;
-            updateStats();
-            showToast(`Neural Hub shifted to ${val}`);
-            // Re-render controls to keep dropdown in sync
-            if(document.getElementById('page-title').innerText === 'Logistics') {
-                renderControls('Logistics');
-            }
-        }
-
-        function initNeuralMap() {
-            const map = document.getElementById('network-map');
-            map.innerHTML = ''; 
-            const nodes = [{id:'MUM',x:20,y:70}, {id:'LKO',x:45,y:35}, {id:'DEL',x:40,y:25}, {id:'BLR',x:25,y:85}];
-            nodes.forEach(n => {
-                const div = document.createElement('div');
-                div.className = 'grid-node';
-                div.style.left = n.x + '%'; div.style.top = n.y + '%';
-                div.innerHTML = `<span class="node-label">${n.id}</span>`;
-                map.appendChild(div);
-            });
         }
 
         function showToast(msg) {
@@ -286,7 +157,6 @@
         }
         
         window.onload = () => {
-            startFirestoreSync();
             const ctxL = document.getElementById('lineChart').getContext('2d');
             myLineChart = new Chart(ctxL, { 
                 type: 'line', data: { labels: ['T-5', 'T-4', 'T-3', 'T-2', 'T-1', 'NOW'], datasets: [{ data: [30, 45, 35, 60, 40, 55], borderColor: '#6366f1', tension: 0.4, fill: true, backgroundColor: 'rgba(99, 102, 241, 0.05)' }] }, 
@@ -298,7 +168,6 @@
                 options: { maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } } 
             });
             updateStats();
-            renderControls('Command Center');
             lucide.createIcons();
         };
     </script>
